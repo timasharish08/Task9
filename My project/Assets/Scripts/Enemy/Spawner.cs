@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class Spawner : MonoBehaviour
@@ -11,32 +12,26 @@ public class Spawner : MonoBehaviour
 
     [SerializeField] private Bird _bird;
 
-    private float _spawnTime;
+    private WaitForSeconds _spawnWait;
+    private Coroutine _spawning;
 
     private void Awake()
     {
-        _spawnTime = _delay;
+        _spawnWait = new WaitForSeconds(_delay);
     }
 
     private void OnEnable()
     {
+        _spawning = StartCoroutine(Spawning());
+
         foreach (Enemy enemy in _pool.Enemies)
             enemy.Died += OnEnemyDied;
     }
 
-    private void Update()
-    {
-        _spawnTime -= Time.deltaTime;
-
-        if (_spawnTime <= 0)
-        {
-            Spawn();
-            _spawnTime = _delay;
-        }
-    }
-
     private void OnDisable()
     {
+        StopCoroutine(_spawning);
+
         foreach (Enemy enemy in _pool.Enemies)
             enemy.Died -= OnEnemyDied;
     }
@@ -52,15 +47,18 @@ public class Spawner : MonoBehaviour
             enemy.gameObject.SetActive(false);
     }
 
-    private void Spawn()
+    private IEnumerator Spawning()
     {
-        Enemy enemy;
+        yield return _spawnWait;
 
+        Enemy enemy;
         if (_pool.TryGetEnemy(out enemy) == false)
             enemy = _pool.Instantiate(_prefab);
 
         enemy.transform.position = new Vector2(transform.position.x, Random.Range(_minPositionY, _maxPositionY));
         enemy.gameObject.SetActive(true);
+
         enemy.Died += OnEnemyDied;
+        _spawning = StartCoroutine(Spawning());
     }
 }

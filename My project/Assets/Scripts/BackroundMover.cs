@@ -22,7 +22,7 @@ public class BackroundMover : MonoBehaviour
             _backgrounds[i] = Instantiate(_prefab, transform.position + Vector3.right * _betweenDistance * i, Quaternion.identity, transform);
     }
 
-    void Update()
+    private void Update()
     {
         foreach (Background background in _backgrounds)
             background.transform.position = Vector3.MoveTowards(background.transform.position, 

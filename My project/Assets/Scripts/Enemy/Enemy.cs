@@ -8,28 +8,32 @@ public class Enemy : Obstacle
     public event UnityAction Died;
 
     [SerializeField] private float _speed;
-
     [SerializeField] private float _delay;
 
     private Shooter _shooter;
-    private float _reloadTime;
+
+    private WaitForSeconds _attackWait;
+    private Coroutine _shooting;
 
     private void Awake()
     {
         _shooter = GetComponent<Shooter>();
-        _reloadTime = _delay;
+        _attackWait = new WaitForSeconds(_delay);
+    }
+
+    private void OnEnable()
+    {
+        _shooting = StartCoroutine(Shooting());
     }
 
     private void Update()
     {
         transform.Translate(-transform.right * _speed * Time.deltaTime);
-        _reloadTime -= Time.deltaTime;
+    }
 
-        if (_reloadTime <= 0)
-        {
-            _shooter.Shoot();
-            _reloadTime = _delay;
-        }
+    private void OnDisable()
+    {
+        StopCoroutine(_shooting);
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
@@ -42,5 +46,12 @@ public class Enemy : Obstacle
     {
         gameObject.SetActive(false);
         Died?.Invoke();
+    }
+
+    private IEnumerator Shooting()
+    {
+        yield return _attackWait;
+        _shooter.Shoot();
+        _shooting = StartCoroutine(Shooting());
     }
 }
